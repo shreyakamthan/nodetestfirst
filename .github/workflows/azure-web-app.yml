@@ -43,42 +43,9 @@ jobs:
       with:
         name: artifacts
         path: ${{ github.workspace }}
-  Deploy:
-    name: Deploy to azure web app
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-    # Download artifact
-    - name: Download a Build Artifact
-      uses: actions/download-artifact@v2
-      continue-on-error: false
-      with:
-        name: artifacts
-        path: ${{ github.workspace }}
-    # login to azure
-    - name: Login to Azure
-      uses: azure/login@v1
-      continue-on-error: false
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
-    # Deploy Arm template
-    - name: Deploy ARM Template
-      uses: azure/CLI@v1
-      continue-on-error: false
-      with:
-        inlineScript: |
-          az group create --name '${{ env.RESOURCEGROUPNAME }}' --location '${{ env.LOCATION }}'
-          az deployment group create --resource-group '${{ env.RESOURCEGROUPNAME }}' --template-file ./armTemplates/windows-webapp-template.json --parameters webAppName='${{ env.AZURE_WEBAPP_NAME }}' hostingPlanName='${{ env.HOSTINGPLANNAME }}' appInsightsLocation='${{ env.APPINSIGHTLOCATION }}' sku='${{ env.SKU }}'
-    # Deploy web app
-    - name: 'Deploy to Azure WebApp'
-      uses: azure/webapps-deploy@v2
-      with: 
-        app-name: ${{ env.AZURE_WEBAPP_NAME }}
-        package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
   FunctionalTests:
     name: Run Functional tests
     runs-on: windows-latest
-    needs: Deploy
     steps:
     # Download artifact
     - name: Download a Build Artifact
